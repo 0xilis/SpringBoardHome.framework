@@ -132,13 +132,41 @@
   id reuseDelegate = [self reuseDelegate];
   [self _destroyAccessoryView];
   if (defaultViewClass) {
+   id aView;
    if ([reuseDelegate respondsToSelector:@selector(iconView:iconAccessoryViewOfClass:)]) {
-    [reuseDelegate iconView:self iconAccessoryViewOfClass:defaultViewClass];
+    aView = [reuseDelegate iconView:self iconAccessoryViewOfClass:defaultViewClass];
    } else {
-    [[defaultViewClass alloc]init];
+    aView = [[defaultViewClass alloc]init];
+   }
+   _accessoryView = aView;
+   if ([_accessoryView respondsToSelector:@selector(setLegibilityStyle:)]) {
+    [_accessoryView setLegibilityStyle:[self->_legibilitySettings style]];
+   }
+   [_accessoryView setAccessoryBrightness:[self effectiveBrightness]];
+   [_accessoryView setAlpha:[self effectiveIconAccessoryAlpha]];
+   [_accessoryView setTransform:CGAffineTransformIdentity];
+   [self updateParallaxSettings];
+   if ([_accessoryView respondsToSelector:@selector(setListLayout:)]) {
+    [_accessoryView setListLayout:[self listLayout]];
+    [_accessoryView sizeToFit];
+   }
+   if ([_accessoryView respondsToSelector:@selector(setActionTapGestureRecognizer:)]) {
+    UITapGestureRecognizer* tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(_accessoryViewTapGestureChanged:)];
+    [tapGesture setDelegate:self];
+    [_accessoryView addGestureRecognizer:tapGesture];
+    [_accessoryView setActionTapGestureRecognizer:tapGesture];
+    _accessoryViewCursorInteraction = [[UIPointerInteraction alloc]initWithDelegate:_accessoryView];
+    [self->_accessoryView addInteraction:_accessoryViewCursorInteraction];
    }
   }
  }
- //finish later
+ if (_accessoryView) {
+  id currentImageView = [self currentImageView];
+  id daSuperview = [_accessoryView superview];
+  if (daSuperview != currentImageView) {
+   [currentImageView addSubview:_accessoryView];
+  }
+  [currentImageView bringSubviewToFront:_accessoryView];
+ }
 }
 @end
