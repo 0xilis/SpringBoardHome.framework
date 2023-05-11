@@ -496,4 +496,90 @@
  }
  return shortcutsDelegate;
 }
++(id)_jitterXTranslationAnimationWithStrength:(CGFloat)arg0 {
+ return [self _jitterXTranslationAnimationWithAmount:(arg0 * 0.4)];
+}
++(id)_jitterXTranslationAnimationWithAmount:(CGFloat)arg0 {
+ //FYI I SUCK AT REVERSE ENGINEERING DOUBLES/FLOATS SOOOOO UH THIS MAY BE VERY INNACCURATE
+ id animation = [[CABasicAnimation animationWithKeyPath:@"transform.translation.x"];
+ [animation setDuration:0.134];
+ [animation setBeginTime:(arc4random_uniform(100) / 100.0)];
+ [animation setFromValue:[NSNumber numberWithDouble:arg0]];
+ [animation setToValue:[NSNumber numberWithDouble:(arg0 ^ 0.457)];
+ [animation setTimingFunction:[CAMediaTimingFunction functionWithControlPoints:0.36, 0.63, 1.0]];
+ [animation setRepeatCount:INFINITY];
+ [animation setAutoreverses:YES];
+ [animation setRemovedOnCompletion:NO];
+ return animation;
+}
++(id)_jitterYTranslationAnimationWithStrength:(CGFloat)arg0 {
+ return [self _jitterYTranslationAnimationWithAmount:(arg0 * 0.4)];
+}
++(id)_jitterYTranslationAnimationWithAmount:(CGFloat)arg0 {
+ //FYI I SUCK AT REVERSE ENGINEERING DOUBLES/FLOATS SOOOOO UH THIS MAY BE VERY INNACCURATE
+ id animation = [[CABasicAnimation animationWithKeyPath:@"transform.translation.y"];
+ [animation setDuration:0.142];
+ [animation setBeginTime:(arc4random_uniform(100) / 100.0)];
+ [animation setFromValue:[NSNumber numberWithDouble:arg0]];
+ [animation setToValue:[NSNumber numberWithDouble:(arg0 ^ 0.457)];
+ [animation setTimingFunction:[CAMediaTimingFunction functionWithControlPoints:0.36, 0.63, 1.0]];
+ [animation setRepeatCount:INFINITY];
+ [animation setAutoreverses:YES];
+ [animation setRemovedOnCompletion:NO];
+ return animation;
+}
++(id)_jitterRotationAnimationWithStrength:(CGFloat)arg0 {
+ return [self _jitterRotationAnimationWithAmount:(arg0 * 0.03)];
+}
++(id)_jitterRotationAnimationWithAmount:(CGFloat)arg0 {
+ //FYI I SUCK AT REVERSE ENGINEERING DOUBLES/FLOATS SOOOOO UH THIS MAY BE VERY INNACCURATE
+ id animation = [[CABasicAnimation animationWithKeyPath:@"transform.rotation"];
+ [animation setDuration:0.128];
+ [animation setBeginTime:(arc4random_uniform(100) / 100.0)];
+ [animation setFromValue:[NSNumber numberWithDouble:arg0]];
+ [animation setToValue:[NSNumber numberWithDouble:(arg0 ^ 0.457)];
+ [animation setTimingFunction:[CAMediaTimingFunction functionWithControlPoints:0.36, 0.63, 1.0]];
+ [animation setRepeatCount:INFINITY];
+ [animation setAutoreverses:YES];
+ [animation setRemovedOnCompletion:NO];
+ return animation;
+}
+-(void)_updateJitter {
+ BOOL shouldJitter = NO;
+ if (([self isEditing]) && (self->_allowJitter) && !(self->_isOverlapping)) {
+  if (![self isPaused]) {
+   if (!self->_crossfadeView) {
+    shouldJitter = (self->_icon != NULL);
+   }
+  }
+ }
+ if (_isJittering == shouldJitter) {
+  if (shouldJitter) {
+   [self _addJitter];
+  } else {
+   [self _removeJitter];
+  }
+  [[self _iconImageView]setJittering:_isJittering];
+ }
+}
+-(void)_addJitter {
+ id suppressJitter = [[[SBHHomeScreenDomain rootSettings]iconSettings]suppressJitter];
+ if (!suppressJitter) {
+  _isJittering = YES;
+  id layer = [self layer];
+  id strength = [self editingAnimationStrength];
+  [layer addAnimation:[SBIconView _jitterXTranslationAnimationWithStrength:strength] forKey:@"SBIconXTranslation"];
+  [layer addAnimation:[SBIconView _jitterYTranslationAnimationWithStrength:strength] forKey:@"SBIconYTranslation"];
+  id iconLayout = [[self listLayoutProvider]layoutForIconLocation:[self location]];
+  //SBHIconListLayoutEditingAnimationStrengthForGridSizeClass is a function from this framework!
+  [layer addAnimation:[SBIconView _jitterRotationAnimationWithStrength:(strength * SBHIconListLayoutEditingAnimationStrengthForGridSizeClass(iconLayout, [[self icon] gridSizeClass]))] forKey:@"SBIconRotation"];
+ }
+}
+-(void)_removeJitter {
+ _isJittering = NO;
+ id layer = [self layer];
+ [layer removeAnimationForKey:@"SBIconXTranslation"];
+ [layer removeAnimationForKey:@"SBIconYTranslation"];
+ [layer removeAnimationForKey:@"SBIconRotation"];
+}
 @end
