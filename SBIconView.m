@@ -169,4 +169,83 @@
   [currentImageView bringSubviewToFront:_accessoryView];
  }
 }
+-(BOOL)supportsConfigurationCard {
+ BOOL ret;
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:supportsConfigurationForDataSource:)) {
+  id visiblyActiveDataSource = [self _visiblyActiveDataSource];
+  if (visiblyActiveDataSource) {
+   ret = [configurationUIDelegate iconView:self supportsConfigurationForDataSource:visiblyActiveDataSource];
+  } else {
+   ret = NO;
+  }
+ } else {
+  ret = NO;
+ }
+ return ret;
+}
+-(BOOL)supportsStackConfigurationCard {
+ return [[self icon]supportsStackConfiguration];
+}
+-(void)presentConfigurationCard {
+ id configuration = [self currentConfigurationInteraction];
+ if (!configuration) {
+  id configurationUIDelegate = [self configurationUIDelegate];
+  if ([configurationUIDelegate respondsToSelector:@selector(iconView:configurationInteractionForDataSource:)]) {
+   id visiblyActiveDataSource = [self _visiblyActiveDataSource];
+   if (visiblyActiveDataSource) {
+    id something = [configurationUIDelegate iconView:self configurationInteractionForDataSource:visiblyActiveDataSource];
+    [something setDelegate:self];
+    [self setCurrentConfigurationInteraction:something];
+   }
+  }
+ }
+ [configuration beginConfiguration];
+ [[SBFAnalyticsClient sharedInstance]emitEvent:0x39];
+}
+-(void)presentStackConfigurationCard {
+ //BSSafeCast is function from PrivateFrameworks/FrontBoardServices.framework
+ id configuration = BSSafeCast([self currentStackConfigurationInteraction], NSClassFromString(@"SBHStackConfigurationInteraction"));
+ if (!configuration) {
+  configuration = [self currentConfigurationInteraction];
+  if (!configuration) {
+   id configurationUIDelegate = [self configurationUIDelegate];
+   if ([configurationUIDelegate respondsToSelector:@selector(stackConfigurationInteractionForIconView:)]) {
+    configuration = BSSafeCast([configurationUIDelegate stackConfigurationInteractionForIconView:self], NSClassFromString(@"SBHStackConfigurationInteraction"));
+    [configuration setDelegate:self];
+    [self setCurrentStackConfigurationInteraction:configuration];
+   }
+  }
+ }
+ [configuration beginConfiguration];
+ [[SBFAnalyticsClient sharedInstance]emitEvent:0x3a];
+}
+-(void)popStackConfigurationCard {
+ [[self currentStackConfigurationInteraction]popConfiguration];
+}
+-(void)dismissStackConfigurationCard {
+ [[self currentStackConfigurationInteraction]endConfiguration];
+}
+-(void)dismissStackConfigurationCardImmediately {
+ [[self currentStackConfigurationInteraction]endConfigurationImmediately];
+}
+-(void)popConfigurationCard {
+  [[self currentConfigurationInteraction]popConfiguration];
+}
+-(void)dismissConfigurationCard {
+ [[self currentConfigurationInteraction]endConfiguration];
+}
+-(void)dismissConfigurationCardImmediately {
+ [[self currentConfigurationInteraction]endConfigurationImmediately];
+}
+-(id)containerViewControllerForConfigurationInteraction:(id)arg0 {
+ id ret;
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:containerViewControllerForConfigurationInteraction:)]) {
+  ret = [configurationUIDelegate iconView:self containerViewControllerForConfigurationInteraction:arg0];
+ } else {
+  ret = 0;
+ }
+ return ret;
+}
 @end
