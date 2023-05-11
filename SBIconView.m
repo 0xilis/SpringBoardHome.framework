@@ -496,6 +496,36 @@
  }
  return shortcutsDelegate;
 }
+-(void)setEditing:(BOOL)editing animated:(BOOL)animated { // ????
+ if (!_isEditing) {
+  _isEditing = editing;
+  [self _applyEditingStateAnimated:animated];
+  return;
+ }
+ if ([self shouldShowCloseBox] != [self _isShowingCloseBox]) {
+  [self _updateCloseBoxAnimated:animated];
+ }
+ BOOL shouldShowAccessoryView = [self shouldShowAccessoryView];
+ BOOL isShowingAccessoryView = [self _isShowingAccessoryView];
+ if (shouldShowAccessoryView == isShowingAccessoryView) {
+  return;
+ } else {
+  [self _updateAccessoryViewAnimated:animated];
+ }
+}
+-(BOOL)isAnimatingScrolling {
+ return [[self _folderIconImageView]isAnimating];
+}
+-(BOOL)_shouldAnimatePropertyWithKey:(id)key {
+ if (![key isEqualToString:@"zPosition"]) {
+  return [[self super]_shouldAnimatePropertyWithKey:key];
+ } else {
+  return YES;
+ }
+}
+-(void)_applyIconImageAlpha:(CGFloat)alpha {
+ [[self currentImageView]setAlpha:alpha];
+}
 +(id)_jitterXTranslationAnimationWithStrength:(CGFloat)arg0 {
  return [self _jitterXTranslationAnimationWithAmount:(arg0 * 0.4)];
 }
