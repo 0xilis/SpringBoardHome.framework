@@ -310,6 +310,9 @@
   [self _updateAccessoryViewAnimated:animated];
  }
 }
+-(BOOL)_shouldEnableGroupBlending {
+ return ![self labelStyle];
+}
 -(BOOL)supportsConfigurationCard {
  BOOL ret;
  id configurationUIDelegate = [self configurationUIDelegate];
@@ -388,5 +391,109 @@
   ret = 0;
  }
  return ret;
+}
+-(id)sourceIconViewForConfigurationInteraction:(id)arg0 {
+ return [self representativeIconViewForModalInteractions];
+}
+-(void)configurationInteractionWillBegin:(id)arg0 {
+ if ([arg0 isKindOfClass:[SBHWidgetConfigurationInteraction class]] || [arg0 isKindOfClass:[SBHStackConfigurationInteraction class]]) {
+  [self _updateCloseBoxAnimated:NO];
+  [self setAllowsEditingAnimation:NO];
+ }
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:configurationWillBeginWithInteraction:)]) {
+  [configurationUIDelegate iconView:self configurationWillBeginWithInteraction:arg0];
+ }
+}
+-(void)configurationInteractionDidBegin:(id)arg0 {
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:configurationDidBeginWithInteraction:)]) {
+  [configurationUIDelegate iconView:self configurationDidBeginWithInteraction:arg0];
+ }
+}
+-(void)configurationInteractionDidCommit:(id)arg0 {
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:configurationDidUpdateWithInteraction:)]) {
+  [configurationUIDelegate iconView:self configurationDidUpdateWithInteraction:arg0];
+ }
+}
+-(void)configurationInteractionWillEnd:(id)arg0 {
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:configurationWillEndWithInteraction:)]) {
+  [configurationUIDelegate iconView:self configurationWillEndWithInteraction:arg0];
+ }
+}
+-(void)configurationInteractionDidEnd:(id)arg0 {
+ if ([arg0 isKindOfClass:[SBHWidgetConfigurationInteraction class]]) {
+  [self setCurrentConfigurationInteraction:nil];
+ }
+ if ([arg0 isKindOfClass:[SBHStackConfigurationInteraction class]]) {
+  [self setCurrentStackConfigurationInteraction:nil];
+ }
+ [self _updateCloseBoxAnimated:YES];
+ [self setAllowsEditingAnimation:YES];
+ id configurationUIDelegate = [self configurationUIDelegate];
+ if ([configurationUIDelegate respondsToSelector:@selector(iconView:configurationDidEndWithInteraction:)]) {
+  [configurationUIDelegate iconView:self configurationDidEndWithInteraction:arg0];
+ }
+}
+-(id)reuseDelegate {
+ id delegate = [self delegate];
+ if ([delegate respondsToSelector:@selector(reuseDelegateForIconView:)]) {
+  delegate = [delegate reuseDelegateForIconView:self];
+ }
+ return delegate;
+}
++(BOOL)supportsPreviewInteraction {
+ return YES;
+}
++(BOOL)showsPopovers {
+ return [[SBHHomeScreenDomain rootSettings]showPopOvers];
+}
+-(BOOL)_hasPopover {
+ BOOL ret;
+ if ([[self class]showsPopovers]) {
+  if (_reallyHasPopover) {
+   return _reallyHasPopover;
+  } else {
+   ret = NO;
+   if ([[self recentsDocumentExtensionProvider]canShowRecentsDocumentExtensionProviderForBundleIdentifier:[self applicationBundleIdentifierForShortcuts]]) {
+    ret = YES;
+   }
+   _reallyHasPopover = ret;
+  }
+ } else {
+  ret = NO;
+ }
+ return ret;
+}
+-(id)recentsDocumentExtensionProvider {
+ id ret;
+ if ([[self class]showsPopovers]) {
+  if (_recentsDocumentExtensionProvider) {
+   ret = _recentsDocumentExtensionProvider;
+  } else {
+   id shortcutsDelegate = [self shortcutsDelegate];
+   if (!_recentsDocumentExtensionProvider) {
+    if ([shortcutsDelegate respondsToSelector:@selector(recentDocumentExtensionProviderForIconView:)]) {
+     _recentsDocumentExtensionProvider = [shortcutsDelegate recentDocumentExtensionProviderForIconView:self];
+    } else {
+     _recentsDocumentExtensionProvider = [[SBHRecentsDocumentExtensionProvider alloc]init];
+    }
+    [_recentsDocumentExtensionProvider setUsesIntrinsicContentSizeBasedOnScreenSize:YES];
+   }
+   ret = _recentsDocumentExtensionProvider;
+  }
+ } else {
+  ret = nil;
+ }
+ return ret;
+}
+-(id)shortcutsDelegate {
+ id shortcutsDelegate = [self delegate];
+ if ([shortcutsDelegate respondsToSelector:@selector(shortcutsDelegateForIconView:)]) {
+  shortcutsDelegate = [shortcutsDelegate shortcutsDelegateForIconView:self];
+ }
+ return shortcutsDelegate;
 }
 @end
