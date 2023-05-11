@@ -53,6 +53,87 @@
   return 0;
  }
 }
+//lol
++(NSInteger)continuityBadgeTypeForContinuityInfo:(id)arg0 {
+ id originatingDeviceType = [self originatingDeviceType];
+ id devType;
+ id ret;
+ if (originatingDeviceType) {
+  devType = [UTType typeWithIdentifier:originatingDeviceType]
+ } else {
+  devType = 0;
+ }
+ if (arg0) {
+  ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.imac"]];
+  if (ret) {
+   ret = 13;
+  } else {
+   ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.mac.laptop"]];
+   if (ret) {
+    ret = 14;
+   } else {
+    ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.mac"]];
+    if (ret) {
+     ret = 4;
+    } else {
+     ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.watch"]];
+     if (ret) {
+      ret = 5;
+     } else {
+      ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.iphone-x"]];
+      if (ret) {
+       ret = 12;
+      } else {
+       ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.iphone"]];
+       if (ret) {
+        ret = 1;
+       } else {
+        ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.ipad"]];
+        if (ret) {
+         ret = 2;
+        } else {
+         ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.ipod"]];
+         if (ret) {
+          ret = 3;
+         } else {
+          ret = [devType conformsToType:[UTType typeWithIdentifier:@"com.apple.apple-tv"]];
+          if (ret) {
+           ret = 6;
+          } else {
+           if ([arg0 isLocationBasedSuggestion]) {
+            ret = 10;
+           } else {
+            if ([arg0 isBluetoothAudioPrediction]) {
+             ret = 9;
+            } else {
+             if ([arg0 isBluetoothPrediction]) {
+              ret = 8;
+             } else {
+              if ([arg0 isHeadphonesPrediction]) {
+               ret = 7;
+              } else {
+               ret = 11;
+               if (![arg0 isFirstWakePrediction]) {
+                ret = 0;
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ } else {
+  ret = 0;
+ }
+ return ret;
+}
 //i never know yanderedev worked at apple
 +(NSInteger)continuityBadgeTypeForNSString:(NSString *)string {
  NSInteger badgeType;
@@ -167,6 +248,66 @@
    [currentImageView addSubview:_accessoryView];
   }
   [currentImageView bringSubviewToFront:_accessoryView];
+ }
+}
+-(void)setIcon:(id)icon animated:(BOOL)animated {
+ if (_icon != icon) {
+  [_icon removeObserver:self];
+  _icon = icon;
+  if (_icon) {
+   [_icon addObserver:self];
+   [self setPaused:NO forReason:0x2];
+   [self _updateIconImageViewAnimated:animated];
+   [self _updateLabelArea];
+   [self _updateProgressAnimated:animated];
+   [self _updateAccessoryViewAnimated:animated];
+   [self _updateCloseBoxAnimated:animated];
+   [self _updateBrightness];
+   [self _applyEditingStateAnimated:animated];
+   [self addGesturesAndInteractionsIfNecessary];
+  } else {
+   [self setCustomIconImageViewController:nil];
+   [self setPaused:YES forReason:0x2];
+  }
+  [self _updateLaunchDisabled];
+  [self _fetchApplicationShortcutItemsIfAppropriate];
+  [self _fetchSupportedMedusaShortcutActionsIfAppropriate];
+ }
+}
+-(CGFloat)_continuousCornerRadius {
+ CGFloat ret = _showsSquareCorners;
+ if (!ret) {
+  ret = [self iconImageCornerRadius];
+ }
+ return ret;
+}
+-(void)setIcon:(id)icon {
+ [self setIcon:icon animated:NO];
+}
+-(void)setLocation:(NSString *)location {
+ [self setLocation:location animated:NO];
+}
+-(void)setLocation:(NSString *)location animated:(BOOL)animated {
+  //BSEqualObjects is function from PrivateFrameworks/FrontBoardServices.framework
+ if (!BSEqualObjects(location, _iconLocation)) {
+  _iconLocation = [location copy];
+  [self _updateFrameToIconViewSize];
+  [self _updateIconImageViewAnimated:animated];
+  [self _updateLabel];
+  [self _updateAccessoryViewAnimated:animated];
+  [self _updateCloseBoxAnimated:animated];
+ }
+}
++(NSUInteger)defaultImageLoadingBehavior {
+ return 0;
+}
+-(void)setContinuityInfo:(id)continuityInfo {
+ [self setContinuityInfo:continuityInfo animated:NO];
+}
+-(void)setContinuityInfo:(id)continuityInfo animated:(BOOL)animated {
+ if (_continuityInfo != continuityInfo) {
+  _continuityInfo = continuityInfo;
+  [self _updateAccessoryViewAnimated:animated];
  }
 }
 -(BOOL)supportsConfigurationCard {
