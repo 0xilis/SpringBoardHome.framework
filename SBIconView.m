@@ -612,4 +612,40 @@
  [layer removeAnimationForKey:@"SBIconYTranslation"];
  [layer removeAnimationForKey:@"SBIconRotation"];
 }
++(CGFloat)iconLiftAlpha {
+ return 1.0;
+}
+-(void)_applyIconAccessoryAlpha:(CGFloat)alpha {
+ [self->_accessoryView setAlpha:alpha];
+ [self->_closeBox setAlpha:alpha];
+ [self->_iconImageView setProgressAlpha:alpha];
+}
+-(CGFloat)effectiveIconLabelAlpha {
+ CGFloat alpha = self->_iconLabelAlpha;
+ if (![self _hideIconLabelForCustomIconImageViewController]) {
+  if ([self isDropping]) {
+   if (_showsImageAndLabelDuringDrop) {
+    alpha = 1.0;
+   }
+  } else {
+   if (![self isOverlapping]) {
+    if (![self isGrabbed]) {
+     alpha = 1.0;
+     if (![self isDragging]) {
+      if (![self _hideIconLabelForContextMenu]) {
+       return self->_iconLabelAlpha;
+      }
+     }
+    }
+   }
+  }
+ }
+ return alpha;
+}
+-(BOOL)_hideIconLabelForCustomIconImageViewController {
+ if (_customIconImageViewController && [_customIconImageViewController respondsToSelector:@selector(wantsLabelHidden)]) {
+  return [_customIconImageViewController wantsLabelHidden];
+ }
+ return NO;
+}
 @end
